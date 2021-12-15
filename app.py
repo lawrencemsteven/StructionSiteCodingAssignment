@@ -5,22 +5,23 @@ import shutil
 
 app = Flask(__name__)
 
-progress = 0
-progress_total = 0
-
 @app.route("/", methods=["GET", "POST"])
 def index():
+	# Display Basic Get Request
 	if request.method == 'GET':
 		return "<h1>Hello World!</h1>"
+	
+	# Post Request Reads JSON Data
 	else:
 		data = request.get_json(force=True)
+
+		# Clear files/ directory
 		if os.path.exists("files/"):
 			shutil.rmtree("files/")
 		os.mkdir("files/")
-		progress = 0
-		progress_total = len(data)
+
+		# Fetch data from each link and write it to file in files
 		for link in data:
-			print(link['url'])
 			with urllib.request.urlopen(link['url']) as f:
 				file_not_saved = True
 				while (file_not_saved):
@@ -29,8 +30,8 @@ def index():
 							file.write(f.read())
 							file.close()
 							file_not_saved = False
-							progress += 1
 					except FileNotFoundError:
+						# Repeat step if files are currently being zipped
 						file_not_saved = True
 
 		return get_files()
@@ -38,5 +39,6 @@ def index():
 
 @app.route("/get_files")
 def get_files():
+	# Zip files and send to user
 	shutil.make_archive("files", "zip", "files")
 	return send_file("files.zip")
